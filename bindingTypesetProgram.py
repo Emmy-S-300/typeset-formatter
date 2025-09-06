@@ -5,8 +5,8 @@ This program is to take any of my favorite online stories and format
 import sys
 from docx import Document
 from bs4 import BeautifulSoup
-# from docx.enum.section import WD_ORIENT
-# from docx.shared import Inches, Pt
+from docx.enum.section import WD_ORIENT
+from docx.shared import Inches, Pt
 # from docx.enum.text import WD_ALIGN_PARAGRAPH
 #from tkinter import Tk, filedialog
 
@@ -15,11 +15,34 @@ from bs4 import BeautifulSoup
 def html_file_read(file_path):
     with open(file_path, "r", encoding="utf-8") as file:
         return file.read()
-    
+
+def set_landscape_and_margins(document):
+    section = document.sections[0]    #define the section. There is usually only on according to https://python-docx.readthedocs.io/en/latest/user/sections.html
+
+    section.orientation = WD_ORIENT.LANDSCAPE   #set the section to landscape mode
+
+    #match the hieght and width to the landscape layout
+    new_width, new_height = section.page_height, section.page_width
+    section.page_width = new_width
+    section.page_height = new_height
+    section.orientation, section.page_width, section.page_height #(LANDSCAPE (1), 10058400, 7772400)
+
+    #Adjust margins 
+    section.top_margin = Inches(0.5)
+    section.bottom_margin = Inches(0.5)
+    section.left_margin = Inches(0.5)
+    section.right_margin = Inches(0.5)
+
+
+
     
 #I want the html file to be written to a word document
 def write_to_word_doc(diff_content_blocks, output_path):
     document = Document()   #create a new document
+
+    set_landscape_and_margins(document)
+
+
     for blocks in diff_content_blocks:
         if blocks.name in ["h1", "h2"]:    #if it is a title
             heading = document.add_paragraph(blocks.get_text()) #get teh text
