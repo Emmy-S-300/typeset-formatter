@@ -7,7 +7,7 @@ from docx import Document
 from bs4 import BeautifulSoup
 from docx.enum.section import WD_ORIENT
 from docx.shared import Inches, Pt
-# from docx.enum.text import WD_ALIGN_PARAGRAPH
+from docx.enum.text import WD_ALIGN_PARAGRAPH
 #from tkinter import Tk, filedialog
 
 #I want to import an html file
@@ -33,24 +33,36 @@ def set_landscape_and_margins(document):
     section.left_margin = Inches(0.5)
     section.right_margin = Inches(0.5)
 
-
+def font_size_alignment(paragraph, font_name = 'Garamond', size = 11, bold = False, alignment = WD_ALIGN_PARAGRAPH.JUSTIFY):
+   run = paragraph.runs[0]
+   font = run.font
+   font.name = font_name
+   font.size = Pt(size)
+   font.bold = bold
+   paragraph.alignment = alignment
+   
 
     
 #I want the html file to be written to a word document
 def write_to_word_doc(diff_content_blocks, output_path):
     document = Document()   #create a new document
 
-    set_landscape_and_margins(document)
-
+    set_landscape_and_margins(document)# calling the landsacpe function
 
     for blocks in diff_content_blocks:
-        if blocks.name in ["h1", "h2"]:    #if it is a title
-            heading = document.add_paragraph(blocks.get_text()) #get teh text
-            heading.style  = 'Heading 1' if blocks.name == 'h1' else 'Heading 2' #give it a book title style if the name is a h1 tag and Strong if it is an h2 tag
-            
-        # if it is a paragraph`
-        elif blocks.name == 'p':
-            document.add_paragraph(blocks.get_text())    #add the text in the paragraphs
+        text = blocks.get_text()
+
+        if blocks.name == "h1":     # it it is a title h1 tag
+            heading = document.add_paragraph(text) #get the text
+            font_size_alignment(heading, font_name = 'Garamond', size = 24, bold = True, alignment = WD_ALIGN_PARAGRAPH.CENTER)  #apply the font and size to the heading
+
+        elif blocks.name == 'h2':   # if it is a title h2 tag
+            heading = document.add_paragraph(text) #get the text
+            font_size_alignment(heading, font_name = 'Garamond', size = 18, bold = True, alignment = WD_ALIGN_PARAGRAPH.CENTER)  #apply the font and size to the heading 2
+
+        elif blocks.name == 'p':    # if it is a paragraph tag
+            paragraph = document.add_paragraph(text) #get the text
+            font_size_alignment(paragraph, font_name = 'Garamond', size = 11, bold = True, alignment = WD_ALIGN_PARAGRAPH.JUSTIFY)  #apply the font and size to the paragraph text
 
     document.save(output_path)  #save the text in the output in the document
     return document
