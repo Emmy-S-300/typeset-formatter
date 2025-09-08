@@ -33,15 +33,19 @@ def set_landscape_and_margins(document):
     section.left_margin = Inches(0.5)
     section.right_margin = Inches(0.5)
 
-def font_size_alignment(paragraph, font_name = 'Garamond', size = 11, bold = False, alignment = WD_ALIGN_PARAGRAPH.JUSTIFY):
+def format_font_size_alignment(paragraph, font_name = 'Garamond', size = 11, bold = False, alignment = WD_ALIGN_PARAGRAPH.JUSTIFY, indent = False):
    run = paragraph.runs[0]
    font = run.font
    font.name = font_name
    font.size = Pt(size)
    font.bold = bold
    paragraph.alignment = alignment
-   
 
+   # if there is an indent needed
+   if indent == True: # if there is an indent needed
+      
+       paragraph_format = paragraph.paragraph_format    #set the format to the variable
+       paragraph_format.first_line_indent = Inches(0.5)
     
 #I want the html file to be written to a word document
 def write_to_word_doc(diff_content_blocks, output_path):
@@ -54,15 +58,15 @@ def write_to_word_doc(diff_content_blocks, output_path):
 
         if blocks.name == "h1":     # it it is a title h1 tag
             heading = document.add_paragraph(text) #get the text
-            font_size_alignment(heading, font_name = 'Garamond', size = 24, bold = True, alignment = WD_ALIGN_PARAGRAPH.CENTER)  #apply the font and size to the heading
+            format_font_size_alignment(heading, font_name = 'Garamond', size = 24, bold = True, alignment = WD_ALIGN_PARAGRAPH.CENTER)  #apply the font and size to the heading
 
         elif blocks.name == 'h2':   # if it is a title h2 tag
             heading = document.add_paragraph(text) #get the text
-            font_size_alignment(heading, font_name = 'Garamond', size = 18, bold = True, alignment = WD_ALIGN_PARAGRAPH.CENTER)  #apply the font and size to the heading 2
+            format_font_size_alignment(heading, font_name = 'Garamond', size = 18, bold = True, alignment = WD_ALIGN_PARAGRAPH.CENTER)  #apply the font and size to the heading 2
 
         elif blocks.name == 'p':    # if it is a paragraph tag
             paragraph = document.add_paragraph(text) #get the text
-            font_size_alignment(paragraph, font_name = 'Garamond', size = 11, bold = True, alignment = WD_ALIGN_PARAGRAPH.JUSTIFY)  #apply the font and size to the paragraph text
+            format_font_size_alignment(paragraph, font_name = 'Garamond', size = 11, bold = True, alignment = WD_ALIGN_PARAGRAPH.JUSTIFY, indent = True)  #apply the font and size to the paragraph text
 
     document.save(output_path)  #save the text in the output in the document
     return document
@@ -93,24 +97,12 @@ if __name__ == "__main__":
         write_to_word_doc(diff_content_blocks, output_path)
         print("HTML content has been written to {output_path}")
 
-#I want it in landscape
-"""def landscape_mode():
-    section = document.sections[-1]
-    section.orientation = WD_ORIENT.LANDSCAPE"""
-
-"""#I want a justified alignment
-def paragraph_format(document, content, output_path):
-    paragraph = document.add_paragraph("This is a formatted paragraph.")
-    paragraph.alignment = WD_ALIGN_PARAGRAPH.JUSTIFIED # Justified align
-    paragraph_format = paragraph.paragraph_format
-    paragraph_format.left_indent = Inches(0.5) # Indent
 """
-
-
-# Margins of at least half an inch all around 
-
-# font in Garamond
-
-# font size in 11
-
-# save it as a word document
+Now I want the pages to fold like a book too.
+I also want a separate title page.
+picture formatting 
+book leftlet settingsb
+comments section at the very end
+blank oages added at the beginning and end
+Ability to take user input and and name the file output.
+"""
