@@ -34,8 +34,107 @@ def set_landscape_and_margins(document):
     section.left_margin = Inches(0.5)
     section.right_margin = Inches(0.5)
 
+def get_metadata(soup):
+    #A dictionary to record all of the metadata needed for a titlepage and summary page
+    metadata = {
+    "title": "...",
+    "author": "...",
+    "published": "...",
+    "completed": None,
+    "words": "...",
+    "chapters": "...",
+    "series": None,
+    "summary": "..."
+    }
+    #Find the data and update the dictionary
+    
+    #title and author
+    metadata["title"] = soup.find("div", {"class": "meta"}).find("h1").get_text(strip=True)
+    metadata["author"] = soup.find("div", {"class": "byline"}).get_text(strip=True)
+    
+    #get the metadata from the stats div
+    stats_dd = soup.find("dt", string="Stats:").find_next("dd").get_text(" ", strip=True)
+
+  #if the published is in the stats block 
+    if "Published:" in stats_dd:
+        metadata["published"] = stats_dd.split("Published:")[1].split("Words:")[0].strip()
+
+    #if the completed exists
+    if "Completed:" in stats_dd:
+        metadata["completed"] = stats_dd.split("Completed:")[1].split("Words:")[0].strip()
+
+    #Words
+    if "Words:" in stats_dd:
+        metadata["words"] = stats_dd.split("Words:")[1].split("Chapters:")[0].strip()
+
+    #Chapters
+    if "Chapters:" in stats_dd:
+        metadata["chapters"] = stats_dd.split("Chapters:")[1].split()
+    
+    #if there is a series the work is a part of
+    series_dd = soup.find("dd", {"class": "series"})
+    metadata["series"] = series_dd.get_text(" ", strip=True) if series_dd else None
+    
+    #if there is a Summary
+    summary_block = soup.find("blockquote", {"class": "userstuff"})
+    metadata["summary"] = summary_block.get_text(strip=True) if summary_block else None
+
+    return metadata
+
+def set_title_page(document, metadata):
+    title_text =document.add_paragraph(metadata["title"]) #get the title
+    format_font_size_alignment(title_text, font_name = 'Garamond', size = 28, bold = True, alignment = WD_ALIGN_PARAGRAPH.CENTER)  #apply the font and size to the title
+
+    author_text = document.add_paragraph(f"by { metadata["author"]}")
+    format_font_size_alignment(author_text, font_name = 'Garamond', size = 24, bold = True, alignment = WD_ALIGN_PARAGRAPH.CENTER)  #apply the font and size to the author
+    
+    #published
+    if metadata["published"]:
+        pub_text = document.add_paragraph(metadata["published"])
+        format_font_size_alignment(pub_text, font_name = 'Garamond', size = 14, bold = True, alignment = WD_ALIGN_PARAGRAPH.CENTER)  #apply the font and size to the published text
+    
+    #completed
+    if metadata["completed"]:
+        comp_text = document.add_paragraph(metadata["completed"])
+        format_font_size_alignment(comp_text, font_name = 'Garamond', size = 14, bold = True, alignment = WD_ALIGN_PARAGRAPH.CENTER)  #apply the font and size to the completed text
+    
+    #words
+    if metadata["words"]:
+        words_text = document.add_paragraph(metadata["words"])
+        format_font_size_alignment(words_text, font_name = 'Garamond', size = 14, bold = True, alignment = WD_ALIGN_PARAGRAPH.CENTER)  #apply the font and size to the words_text
+    
+    #chapters
+    if metadata["chapters"]:
+        chapters_text = document.add_paragraph(metadata["chapters"])
+        format_font_size_alignment(chapters_text, font_name = 'Garamond', size = 14, bold = True, alignment = WD_ALIGN_PARAGRAPH.CENTER)  #apply the font and size to the chapters_text
+    
+    #series
+    if metadata["series"]:
+        series_text = document.add_paragraph(metadata["series"])
+        format_font_size_alignment(series_text, font_name = 'Garamond', size = 14, bold = True, alignment = WD_ALIGN_PARAGRAPH.CENTER)  #apply the font and size to the series_text.
+
+
+    document.add_page_break()
+
+def add_summary_page(document, metadata):
+    #Summary
+    if metadata["summary"]:
+        summary_text = document.add_paragraph(metadata["summary"])
+        format_font_size_alignment(summary_text, font_name = 'Garamond', size = 14, bold = True, alignment = WD_ALIGN_PARAGRAPH.CENTER)  #apply the font and size to the series_text.
+
+    document.add_page_break()
+
+
+    
+
 def format_font_size_alignment(paragraph, font_name = 'Garamond', size = 11, bold = False, alignment = WD_ALIGN_PARAGRAPH.JUSTIFY, indent = False):
-   run = paragraph.runs[0]
+   #ensure a run happens
+   if paragraph.runs:
+       run = paragraph.runs[0]
+   else:
+       run = paragraph.add_run()
+
+       
    font = run.font
    font.name = font_name
    font.size = Pt(size)
@@ -49,10 +148,13 @@ def format_font_size_alignment(paragraph, font_name = 'Garamond', size = 11, bol
        paragraph_format.first_line_indent = Inches(0.5)
     
 #I want the html file to be written to a word document
-def write_to_word_doc(diff_content_blocks, output_path):
+def write_to_word_doc(diff_content_blocks, output_path, metadata):
     document = Document()   #create a new document
 
     set_landscape_and_margins(document)# calling the landsacpe function
+    set_title_page(document, metadata)# calling the title page function
+    add_summary_page(document, metadata)    #calling the summary page function
+
 
     for blocks in diff_content_blocks:
         text = blocks.get_text()
@@ -98,11 +200,14 @@ if __name__ == "__main__":
         output_path = base_name + ".docx"    #force a document file type
         counter = 1
 
+        #ensurer that files are not over written.
         while os.path.exists(output_path):
             output_path = f"{base_name}_{counter}.docx"
             counter +=1
+       
+        metadata= get_metadata(soup)
 
-        write_to_word_doc(diff_content_blocks, output_path)
+        write_to_word_doc(diff_content_blocks, output_path, metadata)
         print(f"HTML content has been written to {output_path}")    #the f string will make the actual name of the file show up
 
 """
