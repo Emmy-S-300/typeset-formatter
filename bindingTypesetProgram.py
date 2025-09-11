@@ -3,6 +3,7 @@ This program is to take any of my favorite online stories and format
  them into a typset so that I can print them and bind them.
 """
 import sys
+import os
 from docx import Document
 from bs4 import BeautifulSoup
 from docx.enum.section import WD_ORIENT
@@ -93,15 +94,22 @@ if __name__ == "__main__":
             diff_content_blocks = [] # a fallback
          
         #write to the word doc
-        output_path = 'output.docx'
+        base_name = input("Title the typeset: ")
+        output_path = base_name + ".docx"    #force a document file type
+        counter = 1
+
+        while os.path.exists(output_path):
+            output_path = f"{base_name}_{counter}.docx"
+            counter +=1
+
         write_to_word_doc(diff_content_blocks, output_path)
-        print("HTML content has been written to {output_path}")
+        print(f"HTML content has been written to {output_path}")    #the f string will make the actual name of the file show up
 
 """
 Now I want the pages to fold like a book too.
 I also want a separate title page.
 picture formatting 
-book leftlet settingsb
+book leftlet settings
 comments section at the very end
 blank oages added at the beginning and end
 Ability to take user input and and name the file output.
