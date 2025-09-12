@@ -2,13 +2,14 @@
 This program is to take any of my favorite online stories and format
  them into a typset so that I can print them and bind them.
 """
-import sys
-import os
+import sys, os
 from docx import Document
 from bs4 import BeautifulSoup
-from docx.enum.section import WD_ORIENT
+from docx.enum.section import WD_ORIENT, WD_SECTION
 from docx.shared import Inches, Pt
 from docx.enum.text import WD_ALIGN_PARAGRAPH
+from docx.oxml.ns import qn
+from docx.oxml import OxmlElement
 #from tkinter import Tk, filedialog
 
 #I want to import an html file
@@ -122,6 +123,14 @@ def set_title_page(document, metadata):
         series_text = document.add_paragraph(f"Series: {metadata["series"]}")
         format_font_size_alignment(series_text, font_name = 'Garamond', size = 14, bold = True, alignment = WD_ALIGN_PARAGRAPH.CENTER)  #apply the font and size to the series_text.
 
+    #binding info
+    binding_info = document.add_paragraph(
+        f"\n "
+        f"Typesetting & Bookbinding by:\n"
+        f"Add your name here"
+        )
+    format_font_size_alignment(binding_info, font_name = 'Garamond', size = 14, bold = True, alignment = WD_ALIGN_PARAGRAPH.CENTER)  #apply the font and size to the series_text.
+
 
     document.add_page_break()
 
@@ -137,10 +146,7 @@ def add_summary_page(document, metadata):
         format_font_size_alignment(summary_text, font_name = 'Garamond', size = 14, bold = False, alignment = WD_ALIGN_PARAGRAPH.JUSTIFY)  #apply the font and size to the series_text.
 
     document.add_page_break()
-
-
     
-
 def format_font_size_alignment(paragraph, font_name = 'Garamond', size = 11, bold = False, alignment = WD_ALIGN_PARAGRAPH.JUSTIFY, indent = False):
    #ensure a run happens
    if paragraph.runs:
@@ -160,24 +166,48 @@ def format_font_size_alignment(paragraph, font_name = 'Garamond', size = 11, bol
       
        paragraph_format = paragraph.paragraph_format    #set the format to the variable
        paragraph_format.first_line_indent = Inches(0.5)
-    
+
+def add_page_numbers(section):
+    footer = section.footer # create the footer section
+    paragraph = footer.paragraphs[0]
+    paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER # center the footers
+
+    run = paragraph.add_run()
+
+
+
+
 #I want the html file to be written to a word document
 def write_to_word_doc(diff_content_blocks, output_path, metadata):
+    #creating variables
+    chap_1 = True
+    
     document = Document()   #create a new document
 
     set_landscape_and_margins(document)# calling the landsacpe function
     set_title_page(document, metadata)# calling the title page function
     add_summary_page(document, metadata)    #calling the summary page function
 
+    new_section = document.add_section(WD_SECTION.NEW_PAGE) #creating a new section so that page numbers start on the story and not the title/summary
+    add_page_numbers(new_section)
+
 
     for blocks in diff_content_blocks:
         text = blocks.get_text()
 
         if blocks.name == "h1":     # it it is a title h1 tag
+            if chap_1:
+                #make sure that it starts on the right page. That being gthe odd pages. This will [ut it on the right side of the book when it is opened.
+                document.add_page_break()
+                chap_1 = False
+            else:
+                document.add_page_break()
+
             heading = document.add_paragraph(text) #get the text
             format_font_size_alignment(heading, font_name = 'Garamond', size = 24, bold = True, alignment = WD_ALIGN_PARAGRAPH.CENTER)  #apply the font and size to the heading
 
         elif blocks.name == 'h2':   # if it is a title h2 tag
+            document.add_page_break()   #start on a new page.
             heading = document.add_paragraph(text) #get the text
             format_font_size_alignment(heading, font_name = 'Garamond', size = 18, bold = True, alignment = WD_ALIGN_PARAGRAPH.CENTER)  #apply the font and size to the heading 2
 
@@ -233,4 +263,5 @@ comments section at the very end
 blank oages added at the beginning and end
 Ability to take user input and and name the file output.
 page breaks before chapters
+maybe use selenium to go in and fix the custom stuff python -docx can't ie bookfold.
 """
