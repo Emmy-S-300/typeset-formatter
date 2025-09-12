@@ -57,7 +57,7 @@ def get_metadata(soup):
 
   #if the published is in the stats block 
     if "Published:" in stats_dd:
-        metadata["published"] = stats_dd.split("Published:")[1].split("Words:")[0].strip()
+        metadata["published"] = stats_dd.split("Published:")[1].split("Completed:")[0].strip()
 
     #if the completed exists
     if "Completed:" in stats_dd:
@@ -69,7 +69,7 @@ def get_metadata(soup):
 
     #Chapters
     if "Chapters:" in stats_dd:
-        metadata["chapters"] = stats_dd.split("Chapters:")[1].split()
+        metadata["chapters"] = stats_dd.split("Chapters:")[1].split()[0]
     
     #if there is a series the work is a part of
     series_dd = soup.find("dd", {"class": "series"})
@@ -82,35 +82,44 @@ def get_metadata(soup):
     return metadata
 
 def set_title_page(document, metadata):
+    #add blank pages in the beginning
+    for i in range(3):
+        document.add_page_break()
+
+    #center the title page vertically
+    center_vert = document.add_paragraph()
+    center_vert.paragraph_format.space_before = Pt(125)
+
+
     title_text =document.add_paragraph(metadata["title"]) #get the title
     format_font_size_alignment(title_text, font_name = 'Garamond', size = 28, bold = True, alignment = WD_ALIGN_PARAGRAPH.CENTER)  #apply the font and size to the title
 
-    author_text = document.add_paragraph(f"by { metadata["author"]}")
+    author_text = document.add_paragraph({ metadata["author"]})
     format_font_size_alignment(author_text, font_name = 'Garamond', size = 24, bold = True, alignment = WD_ALIGN_PARAGRAPH.CENTER)  #apply the font and size to the author
     
     #published
     if metadata["published"]:
-        pub_text = document.add_paragraph(metadata["published"])
+        pub_text = document.add_paragraph(f"Published: {metadata['published']}")
         format_font_size_alignment(pub_text, font_name = 'Garamond', size = 14, bold = True, alignment = WD_ALIGN_PARAGRAPH.CENTER)  #apply the font and size to the published text
     
     #completed
     if metadata["completed"]:
-        comp_text = document.add_paragraph(metadata["completed"])
+        comp_text = document.add_paragraph(f"Completed: {metadata['completed']}")
         format_font_size_alignment(comp_text, font_name = 'Garamond', size = 14, bold = True, alignment = WD_ALIGN_PARAGRAPH.CENTER)  #apply the font and size to the completed text
     
     #words
     if metadata["words"]:
-        words_text = document.add_paragraph(metadata["words"])
+        words_text = document.add_paragraph(f"Words: {metadata["words"]}")
         format_font_size_alignment(words_text, font_name = 'Garamond', size = 14, bold = True, alignment = WD_ALIGN_PARAGRAPH.CENTER)  #apply the font and size to the words_text
     
     #chapters
     if metadata["chapters"]:
-        chapters_text = document.add_paragraph(metadata["chapters"])
+        chapters_text = document.add_paragraph(f"Chapters: {metadata["chapters"]}")
         format_font_size_alignment(chapters_text, font_name = 'Garamond', size = 14, bold = True, alignment = WD_ALIGN_PARAGRAPH.CENTER)  #apply the font and size to the chapters_text
     
     #series
     if metadata["series"]:
-        series_text = document.add_paragraph(metadata["series"])
+        series_text = document.add_paragraph(f"Series: {metadata["series"]}")
         format_font_size_alignment(series_text, font_name = 'Garamond', size = 14, bold = True, alignment = WD_ALIGN_PARAGRAPH.CENTER)  #apply the font and size to the series_text.
 
 
@@ -119,8 +128,13 @@ def set_title_page(document, metadata):
 def add_summary_page(document, metadata):
     #Summary
     if metadata["summary"]:
+        # add "summary" for the heading on the page.
+        summary_heading = document.add_paragraph("Summary:")
+        format_font_size_alignment(summary_heading, font_name = 'Garamond', size = 24, bold = True, alignment = WD_ALIGN_PARAGRAPH.CENTER)  #apply the font and size to the series_text.
+    
+        #add the summary text
         summary_text = document.add_paragraph(metadata["summary"])
-        format_font_size_alignment(summary_text, font_name = 'Garamond', size = 14, bold = True, alignment = WD_ALIGN_PARAGRAPH.CENTER)  #apply the font and size to the series_text.
+        format_font_size_alignment(summary_text, font_name = 'Garamond', size = 14, bold = False, alignment = WD_ALIGN_PARAGRAPH.JUSTIFY)  #apply the font and size to the series_text.
 
     document.add_page_break()
 
@@ -218,4 +232,5 @@ book leftlet settings
 comments section at the very end
 blank oages added at the beginning and end
 Ability to take user input and and name the file output.
+page breaks before chapters
 """
